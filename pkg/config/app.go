@@ -65,6 +65,3 @@ func GetDB() *gorm.DB {
 func GetConfigurationFile() Configuration {
 	return configuration
 }
-
-//TODO: data validation
-//TODO: testing
