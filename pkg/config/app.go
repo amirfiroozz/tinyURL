@@ -36,6 +36,9 @@ type Configuration struct {
 		Scopes                 []string `json:"scopes"`
 		UserInfoAccessTokenURL string   `json:"userInfoAccessTokenURL"`
 	} `json:"google"`
+	JWT struct {
+		Secret string `json:"secret"`
+	} `json:"jwt"`
 }
 
 func genarateConfigFile() {

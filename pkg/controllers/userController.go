@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"time"
 	"tiny-url/pkg/config"
 	"tiny-url/pkg/models"
 	"tiny-url/pkg/utils"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
@@ -98,13 +100,52 @@ func GoogleCallBack(w http.ResponseWriter, r *http.Request) {
 		utils.SendError(w, r, utilError)
 		return
 	}
+
+	//session ignored
 	sessionError := setSession(w, r, user.Email)
 	if sessionError != nil {
 		utilError := generateUtilError(6, 500, sessionError.Error())
 		utils.SendError(w, r, utilError)
 		return
 	}
-	utils.SendResponse(w, r, user)
+
+	//jwt here
+	jwt, jwtError := generateJWT(user.Email)
+	if jwtError != nil {
+		utils.SendError(w, r, *jwtError)
+		return
+	}
+
+	type userLoginInfo struct {
+		User *models.User `json:"user"`
+		JWT  *string      `json:"jwt"`
+	}
+
+	utils.SendResponse(w, r, &userLoginInfo{
+		User: user,
+		JWT:  jwt,
+	})
+
+}
+
+func generateJWT(email string) (*string, *utils.Error) {
+	var mySigningKey = []byte(config.GetConfigurationFile().JWT.Secret)
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+
+	claims["email"] = email
+	claims["exp"] = time.Now().Add(time.Second * 30).Unix()
+
+	tokenString, err := token.SignedString(mySigningKey)
+
+	if err != nil {
+		return nil, &utils.Error{
+			Code:   1,
+			Status: 500,
+			Msg:    err.Error(),
+		}
+	}
+	return &tokenString, nil
 
 }
 

@@ -7,6 +7,7 @@ import (
 	"tiny-url/pkg/models"
 	"tiny-url/pkg/utils"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
@@ -16,7 +17,7 @@ type Error struct {
 	Msg  string
 }
 
-func IfLoggedIn(handlerFunc http.HandlerFunc) http.HandlerFunc {
+func IfSessionLoggedIn(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	SESSION_SECRET := config.GetConfigurationFile().Session.Secret
 	var store = sessions.NewCookieStore([]byte(SESSION_SECRET))
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -44,5 +45,63 @@ func IfLoggedIn(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		}
 		mux.Vars(r)["sessionUserId"] = user.ID.String()
 		handlerFunc.ServeHTTP(w, r)
+	}
+}
+
+func IfJWTLoggedIn(handlerFunc http.HandlerFunc) http.HandlerFunc {
+	JWT_SECRET := config.GetConfigurationFile().JWT.Secret
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Header["Token"] == nil {
+			var resError utils.Error = utils.Error{
+				Code:   1,
+				Status: 403,
+				Msg:    "Unauthorized!!!",
+			}
+			utils.SendError(w, r, resError)
+			return
+		}
+
+		var mySigningKey = []byte(JWT_SECRET)
+
+		token, err := jwt.Parse(r.Header["Token"][0], func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("There was an error in parsing")
+			}
+			return mySigningKey, nil
+		})
+
+		if err != nil {
+			var resError utils.Error = utils.Error{
+				Code:   1,
+				Status: 500,
+				Msg:    err.Error(),
+			}
+			utils.SendError(w, r, resError)
+			return
+		}
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if ok && token.Valid {
+			email := claims["email"]
+			user, err := models.FindUserByEmail(fmt.Sprintf("%v", email))
+			if err != nil {
+				var resError utils.Error = utils.Error{
+					Code:   err.Code,
+					Status: err.Status,
+					Msg:    err.Msg,
+				}
+				utils.SendError(w, r, resError)
+				return
+			}
+			mux.Vars(r)["sessionUserId"] = user.ID.String()
+			handlerFunc.ServeHTTP(w, r)
+			return
+		}
+		var resError utils.Error = utils.Error{
+			Code:   1,
+			Status: 500,
+			Msg:    "error",
+		}
+		utils.SendError(w, r, resError)
+
 	}
 }

@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/go-playground/validator v9.31.0+incompatible
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/sessions v1.2.1
 	github.com/satori/go.uuid v1.2.0

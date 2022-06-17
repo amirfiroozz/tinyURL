@@ -53,11 +53,13 @@ func SetURLExpired(w http.ResponseWriter, r *http.Request) {
 
 	urlId := mux.Vars(r)["urlId"]
 	userId := mux.Vars(r)["sessionUserId"]
+
 	err := models.SetURLExpired(uuid.FromStringOrNil(urlId), userId)
 	if err != nil {
 		utils.SendError(w, r, *err)
 		return
 	}
+
 	utils.SendResponse(w, r, &utils.Succes{
 		Msg: "successfuly set expired",
 	})
