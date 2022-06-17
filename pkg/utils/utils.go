@@ -18,7 +18,6 @@ type Succes struct {
 }
 
 func ParseBody(r *http.Request, x interface{}) *Error {
-	//TODO: check invalid data
 	body, err := ioutil.ReadAll(r.Body)
 	if err == nil {
 		err := json.Unmarshal([]byte(body), x)
@@ -50,7 +49,6 @@ func checkValidData(x interface{}) *Error {
 	return nil
 }
 
-//TODO: integrated error struct * & (error on nil)
 func SendError(w http.ResponseWriter, r *http.Request, err Error) {
 	res, _ := json.Marshal(err)
 	w.Header().Set("Content-Type", "Application/json")

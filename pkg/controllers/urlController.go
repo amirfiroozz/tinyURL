@@ -14,7 +14,6 @@ import (
 func CreateNewURL(w http.ResponseWriter, r *http.Request) {
 	urlBody := &models.URL{}
 	setURLDefaults(r, urlBody)
-	//TODO: call hash for shortURL
 	err := utils.ParseBody(r, urlBody)
 	if err != nil {
 		utils.SendError(w, r, *err)

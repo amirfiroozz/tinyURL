@@ -32,7 +32,6 @@ func IfSessionLoggedIn(handlerFunc http.HandlerFunc) http.HandlerFunc {
 			utils.SendError(w, r, resError)
 			return
 		}
-		//TODO: why not accepting email??
 		user, err := models.FindUserByEmail(fmt.Sprintf("%v", email))
 		if err != nil {
 			var resError utils.Error = utils.Error{

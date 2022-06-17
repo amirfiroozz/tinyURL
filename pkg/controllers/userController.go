@@ -39,9 +39,7 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	utils.SendResponse(w, r, users)
 }
 func GetUserById(w http.ResponseWriter, r *http.Request) {
-	//TODO: uncomment this
-	// userId :=mux.Vars(r)["sessionUserId"]
-	userId := mux.Vars(r)["userId"]
+	userId := mux.Vars(r)["sessionUserId"]
 	user, err := models.GetUserById(userId)
 	if err != nil {
 		utils.SendError(w, r, *err)
@@ -58,6 +56,14 @@ func UserGoogleLogin(w http.ResponseWriter, r *http.Request) {
 
 }
 func GoogleCallBack(w http.ResponseWriter, r *http.Request) {
+	if len(r.URL.Query()) == 0 || len(r.URL.Query()["state"]) == 0 || len(r.URL.Query()["code"]) == 0 {
+		utils.SendError(w, r, utils.Error{
+			Code:   1,
+			Status: 410,
+			Msg:    "no query is found!!",
+		})
+		return
+	}
 	type userEmailInfo struct {
 		Email string `json:"email"`
 	}

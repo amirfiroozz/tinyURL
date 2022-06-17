@@ -30,9 +30,6 @@ func (user *User) AddNewUserToDB() (*User, *utils.Error) {
 
 func GetAllUsers() ([]User, *utils.Error) {
 	var users []User
-	//TODO: handle join here
-	// db.Preload("Chapters").Find(&books)
-	// tx := db.Raw("select * from users").Scan(&users)
 	tx := db.Preload("URLs").Find(&users)
 
 	if tx.Error != nil {
