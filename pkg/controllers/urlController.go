@@ -66,6 +66,12 @@ func SetURLExpired(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func CheckLoggedIn(w http.ResponseWriter, r *http.Request) {
+	utils.SendResponse(w, r, &utils.Succes{
+		Msg: "user is logged in",
+	})
+}
+
 func setURLExpired(url models.URL) {
 	go func() {
 		time.Sleep(time.Duration(url.ExpiresIn) * time.Minute)
@@ -84,7 +90,7 @@ func setURLDefaults(r *http.Request, urlBody *models.URL) {
 	urlBody.ClickedCount = 0
 	urlBody.Expired = false
 	urlBody.ShortURL = generateShortHashString()
-	urlBody.UserId = uuid.FromStringOrNil(mux.Vars(r)["userId"])
+	urlBody.UserId = uuid.FromStringOrNil(mux.Vars(r)["sessionUserId"])
 
 }
 

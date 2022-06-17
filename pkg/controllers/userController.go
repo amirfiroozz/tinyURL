@@ -129,12 +129,13 @@ func GoogleCallBack(w http.ResponseWriter, r *http.Request) {
 }
 
 func generateJWT(email string) (*string, *utils.Error) {
-	var mySigningKey = []byte(config.GetConfigurationFile().JWT.Secret)
+	JWT := config.GetConfigurationFile().JWT
+	var mySigningKey = []byte(JWT.Secret)
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 
 	claims["email"] = email
-	claims["exp"] = time.Now().Add(time.Second * 30).Unix()
+	claims["exp"] = time.Now().Add(time.Hour * time.Duration(JWT.Exp)).Unix()
 
 	tokenString, err := token.SignedString(mySigningKey)
 

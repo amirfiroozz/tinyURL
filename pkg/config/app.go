@@ -38,6 +38,7 @@ type Configuration struct {
 	} `json:"google"`
 	JWT struct {
 		Secret string `json:"secret"`
+		Exp    int    `json:"exp"`
 	} `json:"jwt"`
 }
 

@@ -49,7 +49,7 @@ func IfSessionLoggedIn(handlerFunc http.HandlerFunc) http.HandlerFunc {
 }
 
 func IfJWTLoggedIn(handlerFunc http.HandlerFunc) http.HandlerFunc {
-	JWT_SECRET := config.GetConfigurationFile().JWT.Secret
+	JWT := config.GetConfigurationFile().JWT
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header["Token"] == nil {
 			var resError utils.Error = utils.Error{
@@ -61,11 +61,12 @@ func IfJWTLoggedIn(handlerFunc http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		var mySigningKey = []byte(JWT_SECRET)
+		var mySigningKey = []byte(JWT.Secret)
 
 		token, err := jwt.Parse(r.Header["Token"][0], func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("There was an error in parsing")
+				str := "There was an error in parsing"
+				return nil, fmt.Errorf("%v", str)
 			}
 			return mySigningKey, nil
 		})
