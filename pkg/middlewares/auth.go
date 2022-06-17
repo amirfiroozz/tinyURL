@@ -111,8 +111,8 @@ func IsAdmin(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		//TODO: implement is admin middleware
 		var resError utils.Error = utils.Error{
 			Code:   1,
-			Status: 500,
-			Msg:    "error",
+			Status: 403,
+			Msg:    "only admins have access!!",
 		}
 		utils.SendError(w, r, resError)
 
