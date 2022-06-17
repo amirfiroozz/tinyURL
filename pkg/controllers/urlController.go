@@ -81,6 +81,11 @@ func setURLDefaults(r *http.Request, urlBody *models.URL) {
 	urlBody.Created_At = time.Now()
 	urlBody.ClickedCount = 0
 	urlBody.Expired = false
+	urlBody.ShortURL = generateShortHashString()
 	urlBody.UserId = uuid.FromStringOrNil(mux.Vars(r)["userId"])
 
+}
+
+func generateShortHashString() string {
+	return fmt.Sprintf("%v", uuid.NewV4())[:7]
 }
