@@ -105,3 +105,16 @@ func IfJWTLoggedIn(handlerFunc http.HandlerFunc) http.HandlerFunc {
 
 	}
 }
+
+func IsAdmin(handlerFunc http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//TODO: implement is admin middleware
+		var resError utils.Error = utils.Error{
+			Code:   1,
+			Status: 500,
+			Msg:    "error",
+		}
+		utils.SendError(w, r, resError)
+
+	}
+}
