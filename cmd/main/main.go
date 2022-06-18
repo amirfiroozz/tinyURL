@@ -10,7 +10,6 @@ import (
 
 func main() {
 	r := mux.NewRouter()
-	//TODO: handle CORS here
 	routes.CreateRoutes(r.PathPrefix("/api").Subrouter())
 	fmt.Println("Running server on port 3000")
 	err := http.ListenAndServe("localhost:3000", r)
