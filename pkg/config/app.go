@@ -45,6 +45,11 @@ type Configuration struct {
 		Exp    int    `json:"exp"`
 	} `json:"jwt"`
 	Token string `json:"token"`
+	Redis struct {
+		Addr     string `json:"addr"`
+		Password string `json:"password"`
+		DB       int    `json:"db"`
+	} `json:"redis"`
 }
 
 func genarateConfigFile() {
@@ -74,9 +79,9 @@ func init() {
 func setRedisClient() {
 	//TODO: handle error when redis is not up...
 	rdb = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Addr:     configuration.Redis.Addr,
+		Password: configuration.Redis.Password,
+		DB:       configuration.Redis.DB,
 	})
 }
 func GetRdb() *redis.Client {
