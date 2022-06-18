@@ -40,6 +40,7 @@ type Configuration struct {
 		Secret string `json:"secret"`
 		Exp    int    `json:"exp"`
 	} `json:"jwt"`
+	Token string `json:"token"`
 }
 
 func genarateConfigFile() {

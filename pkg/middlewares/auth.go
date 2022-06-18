@@ -48,9 +48,11 @@ func IfSessionLoggedIn(handlerFunc http.HandlerFunc) http.HandlerFunc {
 }
 
 func IfJWTLoggedIn(handlerFunc http.HandlerFunc) http.HandlerFunc {
+	TOEKN_STRING := "Token"
 	JWT := config.GetConfigurationFile().JWT
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Header["Token"] == nil {
+
+		if r.Header[TOEKN_STRING] == nil {
 			var resError utils.Error = utils.Error{
 				Code:   1,
 				Status: 403,
@@ -62,7 +64,8 @@ func IfJWTLoggedIn(handlerFunc http.HandlerFunc) http.HandlerFunc {
 
 		var mySigningKey = []byte(JWT.Secret)
 
-		token, err := jwt.Parse(r.Header["Token"][0], func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.Parse(r.Header[TOEKN_STRING][0], func(token *jwt.Token) (interface{}, error) {
+
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				str := "There was an error in parsing"
 				return nil, fmt.Errorf("%v", str)
@@ -79,6 +82,7 @@ func IfJWTLoggedIn(handlerFunc http.HandlerFunc) http.HandlerFunc {
 			utils.SendError(w, r, resError)
 			return
 		}
+
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if ok && token.Valid {
 			email := claims["email"]
