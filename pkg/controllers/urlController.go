@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	redis "tiny-url/pkg/middlewares"
 	"tiny-url/pkg/models"
 	"tiny-url/pkg/utils"
 
@@ -28,6 +29,11 @@ func CreateNewURL(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%v:	URL:%v sent to scheduler to get expired....\n", time.Now(), url.ID)
 		setURLExpired(*url)
 	}
+	err = redis.Set(url.ExpiresIn, url.ShortURL, url.OriginalURl)
+	if err != nil {
+		fmt.Println("redis memory set error")
+	}
+
 	utils.SendResponse(w, r, url)
 }
 
@@ -35,14 +41,25 @@ func GetOriginalURLAndUpdateClickedCount(w http.ResponseWriter, r *http.Request)
 	type originalURL struct {
 		URL string `json:"url"`
 	}
+	var originalUrl originalURL
 
 	shortURL := mux.Vars(r)["shortURL"]
+	if redis.IfExists(shortURL) {
+		val, err := redis.Get(shortURL)
+		if err != nil {
+			utils.SendError(w, r, *err)
+			return
+		}
+		originalUrl.URL = *val
+		updateClickedCount(w, r, shortURL)
+		utils.SendResponse(w, r, originalUrl)
+		return
+	}
 	url, err := models.GetOriginalURLAndUpdateClickedCount(shortURL)
 	if err != nil {
 		utils.SendError(w, r, *err)
 		return
 	}
-	var originalUrl originalURL
 	originalUrl.URL = *url
 	utils.SendResponse(w, r, originalUrl)
 
@@ -53,7 +70,7 @@ func SetURLExpired(w http.ResponseWriter, r *http.Request) {
 	urlId := mux.Vars(r)["urlId"]
 	userId := mux.Vars(r)["sessionUserId"]
 
-	err := models.SetURLExpired(uuid.FromStringOrNil(urlId), userId)
+	_, err := models.SetURLExpired(uuid.FromStringOrNil(urlId), userId)
 	if err != nil {
 		utils.SendError(w, r, *err)
 		return
@@ -74,7 +91,7 @@ func CheckLoggedIn(w http.ResponseWriter, r *http.Request) {
 func setURLExpired(url models.URL) {
 	go func() {
 		time.Sleep(time.Duration(url.ExpiresIn) * time.Minute)
-		err := models.SetURLExpired(url.ID, "")
+		_, err := models.SetURLExpired(url.ID, "")
 		if err != nil {
 			fmt.Printf("error ecurred: %v\n", err.Msg)
 			return
@@ -95,4 +112,16 @@ func setURLDefaults(r *http.Request, urlBody *models.URL) {
 
 func generateShortHashString() string {
 	return fmt.Sprintf("%v", uuid.NewV4())[:7]
+}
+
+func updateClickedCount(w http.ResponseWriter, r *http.Request, shortURL string) {
+	go func() {
+		fmt.Printf("Increasing clicked count of shortURL:%v\n", shortURL)
+		err := models.UpdateClickedCount(shortURL)
+		if err != nil {
+			utils.SendError(w, r, *err)
+			fmt.Printf("error while increasing clicked count of shortURL:%v\n", shortURL)
+			return
+		}
+	}()
 }

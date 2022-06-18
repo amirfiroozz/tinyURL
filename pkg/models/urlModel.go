@@ -68,28 +68,58 @@ func GetOriginalURLAndUpdateClickedCount(shortURL string) (*string, *utils.Error
 
 }
 
-func SetURLExpired(urlId uuid.UUID, userId string) *utils.Error {
-	var tx *gorm.DB
-	if userId == "" {
-		tx = db.Exec("UPDATE urls SET expired = true WHERE id = ?", urlId)
-	} else {
-		tx = db.Exec("UPDATE urls SET expired = true WHERE id = ? and user_id=?", urlId, userId)
-	}
+func UpdateClickedCount(shortURL string) *utils.Error {
+	var url URL
+	tx := db.Exec("Update urls	Set clicked_count = clicked_count + 1	Where short_url = ?", shortURL)
 	if tx.Error != nil {
 		return &utils.Error{
+			Code:   3,
+			Status: 500,
+			Msg:    tx.Error.Error(),
+		}
+	}
+	if tx.RowsAffected == 0 {
+		return &utils.Error{
+			Code:   1,
+			Status: 404,
+			Msg:    "nothing founded",
+		}
+	}
+	EXPIRED := true
+	if url.Expired == EXPIRED {
+		return &utils.Error{
+			Code:   1,
+			Status: 410,
+			Msg:    "this url is expired!!!",
+		}
+	}
+	return nil
+
+}
+
+func SetURLExpired(urlId uuid.UUID, userId string) (*URL, *utils.Error) {
+	var tx *gorm.DB
+	var url URL
+	if userId == "" {
+		tx = db.Exec("UPDATE urls SET expired = true WHERE id = ?", urlId).First(&url)
+	} else {
+		tx = db.Exec("UPDATE urls SET expired = true WHERE id = ? and user_id=?", urlId, userId).First(&url)
+	}
+	if tx.Error != nil {
+		return nil, &utils.Error{
 			Code:   1,
 			Msg:    tx.Error.Error(),
 			Status: 500,
 		}
 	}
 	if tx.RowsAffected == 0 {
-		return &utils.Error{
+		return nil, &utils.Error{
 			Code:   2,
 			Msg:    "404 not found!",
 			Status: 404,
 		}
 	}
-	return nil
+	return &url, nil
 }
 
 func updateClickedCount(url *URL) error {

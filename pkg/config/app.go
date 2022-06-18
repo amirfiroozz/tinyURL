@@ -1,10 +1,12 @@
 package config
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 
+	"github.com/go-redis/redis/v8"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -12,6 +14,8 @@ import (
 var (
 	db            *gorm.DB
 	configuration Configuration
+	ctx           context.Context
+	rdb           *redis.Client
 )
 
 type Configuration struct {
@@ -62,7 +66,27 @@ func init() {
 		panic(err)
 	}
 	db = d
+	ctx = context.Background()
+	//TODO: handle error
+	setRedisClient()
 }
+
+func setRedisClient() {
+	//TODO: handle error when redis is not up...
+	rdb = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+}
+func GetRdb() *redis.Client {
+	return rdb
+}
+
+func GetCtx() context.Context {
+	return ctx
+}
+
 func GetDB() *gorm.DB {
 	return db
 }
