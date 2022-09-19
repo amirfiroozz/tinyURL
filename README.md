@@ -1,2 +1,2 @@
-# tinyURL
+# Kechik
 URL shortner golang mux
